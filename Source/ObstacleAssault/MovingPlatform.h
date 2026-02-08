@@ -30,8 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Speed{ 100.0f };
 
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	bool bShowPath{ true };
+#endif
 
 private:
 	int CurrentWaypointIndex{ 0 };

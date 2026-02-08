@@ -13,14 +13,14 @@ AMovingPlatform::AMovingPlatform()
 void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// Store the starting location
 	StartLocation = GetActorLocation();
 	
+#if WITH_EDITOR
 	if (bShowPath)
 	{
 		DrawPath();
 	}
+#endif
 }
 
 // Called every frame
