@@ -6,6 +6,18 @@
 #include "GameFramework/Actor.h"
 #include "MovingPlatform.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPlatformWaypoint
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
+	FVector Location{FVector::ZeroVector};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
+	float Speed{100.0f};
+};
+
 UCLASS()
 class OBSTACLEASSAULT_API AMovingPlatform : public AActor
 {
@@ -20,24 +32,21 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	TArray<FVector> Waypoints;
-
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float Speed{ 100.0f };
-
 #if WITH_EDITORONLY_DATA
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	bool bShowPath{ true };
+	bool bShowPath{true};
 #endif
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	TArray<FPlatformWaypoint> Waypoints;
 
 private:
-	int CurrentWaypointIndex{ 0 };
+	int CurrentWaypointIndex{0};
 	FVector StartLocation;
 
+#if WITH_EDITOR
 	void DrawPath();
+#endif
 };

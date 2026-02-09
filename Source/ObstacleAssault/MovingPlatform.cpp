@@ -35,17 +35,19 @@ void AMovingPlatform::Tick(float DeltaTime)
 	}
 
 	FVector CurrentLocation = GetActorLocation();
-	FVector TargetLocation = Waypoints[CurrentWaypointIndex];
+	const FPlatformWaypoint& CurrentWaypoint = Waypoints[CurrentWaypointIndex];
+	FVector TargetLocation = CurrentWaypoint.Location;
 
 	// Calculate direction vector (normalized)
 	FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
 
-	// Move towards target
-	FVector NewLocation = CurrentLocation + Direction * Speed * DeltaTime;
+	// Move towards target using the waypoint's speed
+	float CurrentSpeed = CurrentWaypoint.Speed;
+	FVector NewLocation = CurrentLocation + Direction * CurrentSpeed * DeltaTime;
 
 	// Check if we've reached the target (within a small threshold)
 	float DistanceToTarget = FVector::Dist(CurrentLocation, TargetLocation);
-	if (DistanceToTarget <= Speed * DeltaTime)
+	if (DistanceToTarget <= CurrentSpeed * DeltaTime)
 	{
 		// Snap to target and move to next waypoint
 		NewLocation = TargetLocation;
@@ -70,7 +72,6 @@ void AMovingPlatform::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 		}
 	}
 }
-#endif
 
 void AMovingPlatform::DrawPath()
 {
@@ -80,12 +81,12 @@ void AMovingPlatform::DrawPath()
 	}
 
 	FVector CurrentPos = GetActorLocation();
-	// Record current position before we move
 	FVector PreviousLocation = CurrentPos;
 
-	for (const FVector& Waypoint : Waypoints)
+	for (int32 i = 0; i < Waypoints.Num(); i++)
 	{
-		FVector WaypointWorldLocation = Waypoint;
+		const FPlatformWaypoint& Waypoint = Waypoints[i];
+		FVector WaypointWorldLocation = Waypoint.Location;
 
 		// Draw line
 		DrawDebugLine(
@@ -99,14 +100,25 @@ void AMovingPlatform::DrawPath()
 			3.0f
 		);
 
-		// Draw sphere at waypoint
+		// Draw sphere at waypoint (color varies by speed)
+		FColor SphereColor = FColor::MakeRedToGreenColorFromScalar(FMath::Clamp(Waypoint.Speed / 200.0f, 0.0f, 1.0f));
 		DrawDebugSphere(
 			GetWorld(),
 			WaypointWorldLocation,
 			20.0f,
 			12,
-			FColor::Yellow,
+			SphereColor,
 			true,
+			-1.0f
+		);
+
+		// Draw speed text at waypoint
+		DrawDebugString(
+			GetWorld(),
+			WaypointWorldLocation + FVector(0.0f, 0.0f, 30.0f),
+			FString::Printf(TEXT("%.0f u/s"), Waypoint.Speed),
+			nullptr,
+			FColor::White,
 			-1.0f
 		);
 
@@ -125,4 +137,5 @@ void AMovingPlatform::DrawPath()
 		3.0f
 	);
 }
+#endif
 
