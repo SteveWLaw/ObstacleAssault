@@ -11,8 +11,13 @@ struct FPlatformWaypoint
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint", 
+		meta = (DisplayName = "Location (X, Y, Z)"))
 	FVector Location{FVector::ZeroVector};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint",
+		meta = (DisplayName = "Rotation (Pitch, Yaw, Roll)"))
+	FRotator Rotation{FRotator::ZeroRotator};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
 	float Speed{100.0f};
@@ -44,7 +49,6 @@ public:
 
 private:
 	int CurrentWaypointIndex{0};
-	FVector StartLocation;
 
 #if WITH_EDITOR
 	void DrawPath();

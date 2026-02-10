@@ -13,7 +13,6 @@ AMovingPlatform::AMovingPlatform()
 void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
-	StartLocation = GetActorLocation();
 	
 #if WITH_EDITOR
 	if (bShowPath)
@@ -28,33 +27,44 @@ void AMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Return early if no waypoints are set
 	if (Waypoints.Num() == 0)
 	{
 		return;
 	}
 
 	FVector CurrentLocation = GetActorLocation();
+	FRotator CurrentRotation = GetActorRotation();
 	const FPlatformWaypoint& CurrentWaypoint = Waypoints[CurrentWaypointIndex];
 	FVector TargetLocation = CurrentWaypoint.Location;
+	FRotator TargetRotation = CurrentWaypoint.Rotation;
 
-	// Calculate direction vector (normalized)
+	// Calculate movement
 	FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
-
-	// Move towards target using the waypoint's speed
 	float CurrentSpeed = CurrentWaypoint.Speed;
+	float DistanceToTarget = FVector::Dist(CurrentLocation, TargetLocation);
+	
+	// Calculate time to reach target
+	float TimeToReachTarget = (CurrentSpeed > 0.0f) ? (DistanceToTarget / CurrentSpeed) : 0.0f;
+	
+	// Calculate rotation speed needed to complete rotation in same time as movement
+	float RotationSpeed = (TimeToReachTarget > 0.0f) ? (1.0f / TimeToReachTarget) : 10.0f;
+	
+	// Move towards target
 	FVector NewLocation = CurrentLocation + Direction * CurrentSpeed * DeltaTime;
 
-	// Check if we've reached the target (within a small threshold)
-	float DistanceToTarget = FVector::Dist(CurrentLocation, TargetLocation);
+	// Smoothly interpolate rotation to match movement timing
+	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, RotationSpeed);
+
+	// Check if reached target
 	if (DistanceToTarget <= CurrentSpeed * DeltaTime)
 	{
-		// Snap to target and move to next waypoint
 		NewLocation = TargetLocation;
+		NewRotation = TargetRotation;  // Snap to final rotation
 		CurrentWaypointIndex = (CurrentWaypointIndex + 1) % Waypoints.Num();
 	}
 
 	SetActorLocation(NewLocation);
+	SetActorRotation(NewRotation);
 }
 
 #if WITH_EDITOR
@@ -138,4 +148,3 @@ void AMovingPlatform::DrawPath()
 	);
 }
 #endif
-
