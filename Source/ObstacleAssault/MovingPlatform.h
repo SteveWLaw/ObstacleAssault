@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -16,11 +16,21 @@ struct FPlatformWaypoint
 	FVector Location{FVector::ZeroVector};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint",
-		meta = (DisplayName = "Rotation (Pitch, Yaw, Roll)"))
-	FRotator Rotation{FRotator::ZeroRotator};
+		meta = (DisplayName = "Rotation During Transit (degrees)"))
+	FRotator RotationDuringTransit{FRotator::ZeroRotator};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
 	float Speed{100.0f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
+	float WaitTimeAtWaypoint{0.0f};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Waypoint", 
+		meta = (DisplayName = "Time to Reach (seconds)"))
+	float TimeToReach{0.0f};
+
+	// Internal: Pre-calculated constant rotation speed for this segment
+	FRotator RotationSpeedForSegment{FRotator::ZeroRotator};
 };
 
 UCLASS()
@@ -31,11 +41,9 @@ class OBSTACLEASSAULT_API AMovingPlatform : public AActor
 public:
 	AMovingPlatform();
 
-protected:
-	virtual void BeginPlay() override;
-
-public:
 	virtual void Tick(float DeltaTime) override;
+
+	void GetTotalTimeOverAllWaypoints(float& OutTotalTime) const { OutTotalTime = TotalTimeOverAllWaypoints; }
 
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -47,8 +55,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	TArray<FPlatformWaypoint> Waypoints;
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	float TimeToCompleteLoop{ 0.0f };
+
+protected:
+	virtual void BeginPlay() override;
+
 private:
-	int CurrentWaypointIndex{0};
+	int32 CurrentWaypointIndex{0};
+	float DistanceTraveled{0.0f};
+	float TotalTimeOverAllWaypoints{0.0f};
+	float WaitTimeAtCurrentWaypoint{0.0f};
+	
+	void CalculateTotalTimeOverAllWaypoints();
 
 #if WITH_EDITOR
 	void DrawPath();
